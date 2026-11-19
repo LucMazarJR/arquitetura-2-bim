@@ -79,5 +79,12 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  web:
+    build: ./web
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
 volumes:
   timescale-data:
