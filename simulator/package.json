@@ -1,0 +1,17 @@
+{
+  "name": "energy-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Simulates ESP32 + PZEM-004T meters publishing readings over MQTT",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "mqtt": "^5.16.1",
+    "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3"
+  }
+}
