@@ -35,6 +35,12 @@ CREATE TABLE analysis.alerts (
   raised_at       TIMESTAMPTZ      NOT NULL
 );
 
+CREATE TABLE analysis.goals (
+  meter_id          TEXT             PRIMARY KEY,
+  monthly_goal_kwh  DOUBLE PRECISION NOT NULL,
+  updated_at        TIMESTAMPTZ      NOT NULL
+);
+
 CREATE TABLE forecast.month_start (
   meter_id          TEXT             NOT NULL,
   month             TEXT             NOT NULL,

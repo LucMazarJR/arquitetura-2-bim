@@ -1,10 +1,12 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
+import { createEvent, type GoalUpdated, type GoalUpdatedEvent } from "../../contracts/events";
 import { Cache, EventBus } from "../../platform/ports";
 import { LiveGateway } from "./live.gateway";
 import { ReadModel } from "./read-model";
 
 const lastReadingKey = (meterId: string) => `monitoring:last-reading:${meterId}`;
 const forecastKey = (meterId: string) => `monitoring:forecast:${meterId}`;
+const goalKey = (meterId: string) => `monitoring:goal:${meterId}`;
 
 @Injectable()
 export class MonitoringService implements OnModuleInit {
@@ -52,6 +54,17 @@ export class MonitoringService implements OnModuleInit {
 
   alerts(meterId: string) {
     return this.readModel.alerts(meterId, 20);
+  }
+
+  goal(meterId: string) {
+    return this.getJson(goalKey(meterId));
+  }
+
+  async setGoal(meterId: string, monthlyGoalKwh: number): Promise<GoalUpdated> {
+    const goal: GoalUpdated = { meterId, monthlyGoalKwh, updatedAt: new Date().toISOString() };
+    await this.cache.set(goalKey(meterId), JSON.stringify(goal));
+    await this.bus.publish("goals", createEvent<GoalUpdatedEvent>("meta.atualizada", goal, "monitoring"));
+    return goal;
   }
 
   private async getJson(key: string) {

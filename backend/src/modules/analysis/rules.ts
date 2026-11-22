@@ -1,4 +1,4 @@
-import type { ReadingValidated, Severity } from "../../contracts/events";
+import type { ForecastUpdated, ReadingValidated, Severity } from "../../contracts/events";
 import type { AnalysisConfig } from "./analysis.config";
 
 export const RULES = "ANALYSIS_RULES";
@@ -47,6 +47,30 @@ export class VoltageOutOfRange implements Rule {
       limit: tooLow ? this.minV : this.maxV,
     };
   }
+}
+
+export type GoalViolation = Violation & { rule: string };
+
+export function checkMonthlyGoal(forecast: ForecastUpdated, goalKwh: number): GoalViolation | null {
+  if (forecast.consumedSoFarKwh > goalKwh) {
+    return {
+      rule: "monthly-goal-exceeded",
+      severity: "critical",
+      message: `Monthly goal exceeded: ${forecast.consumedSoFarKwh.toFixed(1)} kWh used (goal ${goalKwh} kWh)`,
+      measuredValue: forecast.consumedSoFarKwh,
+      limit: goalKwh,
+    };
+  }
+  if (forecast.projectedKwh > goalKwh) {
+    return {
+      rule: "monthly-goal-at-risk",
+      severity: "warning",
+      message: `At the current pace the month ends at ${forecast.projectedKwh.toFixed(1)} kWh (goal ${goalKwh} kWh)`,
+      measuredValue: forecast.projectedKwh,
+      limit: goalKwh,
+    };
+  }
+  return null;
 }
 
 export function defaultRules(config: AnalysisConfig): Rule[] {

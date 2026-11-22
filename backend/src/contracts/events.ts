@@ -48,14 +48,22 @@ export interface ForecastUpdated {
   calculatedAt: string;
 }
 
+export interface GoalUpdated {
+  meterId: string;
+  monthlyGoalKwh: number;
+  updatedAt: string;
+}
+
 export type ReadingValidatedEvent = Envelope<"leitura.validada", ReadingValidated>;
 export type AlertRaisedEvent = Envelope<"alerta.gerado", AlertRaised>;
 export type ForecastUpdatedEvent = Envelope<"previsao.atualizada", ForecastUpdated>;
+export type GoalUpdatedEvent = Envelope<"meta.atualizada", GoalUpdated>;
 
 export interface Streams {
   readings: ReadingValidatedEvent;
   alerts: AlertRaisedEvent;
   forecasts: ForecastUpdatedEvent;
+  goals: GoalUpdatedEvent;
 }
 
 export type StreamName = keyof Streams;
