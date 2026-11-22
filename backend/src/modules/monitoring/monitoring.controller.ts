@@ -48,10 +48,8 @@ export class MonitoringController {
   }
 
   @Get("meters/:meterId/goal")
-  async goal(@Param("meterId") meterId: string) {
-    const goal = await this.monitoring.goal(meterId);
-    if (!goal) throw new NotFoundException("no goal set for this meter");
-    return goal;
+  goal(@Param("meterId") meterId: string) {
+    return this.monitoring.goal(meterId);
   }
 
   @Put("meters/:meterId/goal")

@@ -4,7 +4,8 @@ import { AlertList } from "./components/AlertList";
 import { ForecastCard } from "./components/ForecastCard";
 import { HistoryBars } from "./components/HistoryBars";
 import { LiveChart, type PowerPoint } from "./components/LiveChart";
-import { StatCard } from "./components/StatCard";
+import { Gauges, Readout } from "./components/Readout";
+import { useHighContrast } from "./useHighContrast";
 import { useLiveFeed } from "./useLiveFeed";
 
 const MAX_LIVE_POINTS = 90;
@@ -18,6 +19,7 @@ export function App() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [forecast, setForecast] = useState<Forecast | null>(null);
   const [goal, setGoal] = useState<Goal | null>(null);
+  const [highContrast, toggleHighContrast] = useHighContrast();
 
   useEffect(() => {
     const loadMeters = async () => {
@@ -58,41 +60,52 @@ export function App() {
   });
 
   return (
-    <main className="layout">
-      <header className="header">
-        <div>
-          <h1>Energy Monitor</h1>
-          <span className={`status ${connected ? "status--on" : ""}`}>{connected ? "live" : "offline"}</span>
+    <div className="app">
+      <header className="topbar">
+        <div className="brand">
+          <svg className="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" />
+            <path d="M18 4 8 18h7l-2 10 11-15h-7z" />
+          </svg>
+          <div>
+            <h1 className="brand__name">Monitor de Energia</h1>
+            <p className="brand__sub">Painel do medidor residencial</p>
+          </div>
         </div>
-        <select value={meterId ?? ""} onChange={(e) => setMeterId(e.target.value)} aria-label="Meter">
-          {meters.length === 0 && <option value="">No meters yet</option>}
-          {meters.map((m) => (
-            <option key={m.meterId} value={m.meterId}>
-              {m.homeId} / {m.meterId}
-            </option>
-          ))}
-        </select>
+
+        <div className="topbar__controls">
+          <label className="field">
+            <span>Medidor</span>
+            <select value={meterId ?? ""} onChange={(e) => setMeterId(e.target.value)}>
+              {meters.length === 0 && <option value="">Nenhum medidor ainda</option>}
+              {meters.map((m) => (
+                <option key={m.meterId} value={m.meterId}>
+                  {m.homeId} · {m.meterId}
+                </option>
+              ))}
+            </select>
+          </label>
+          <span className={connected ? "status status--on" : "status"} role="status">
+            {connected ? "Ao vivo" : "Desconectado"}
+          </span>
+          <button type="button" className="toggle" aria-pressed={highContrast} onClick={toggleHighContrast}>
+            Alto contraste: {highContrast ? "ligado" : "desligado"}
+          </button>
+        </div>
       </header>
 
-      <section className="stats">
-        <StatCard label="Power" value={reading ? Math.round(reading.powerW).toLocaleString() : "-"} unit="W" highlight />
-        <StatCard label="Voltage" value={reading ? reading.voltageV.toFixed(1) : "-"} unit="V" />
-        <StatCard label="Current" value={reading ? reading.currentA.toFixed(2) : "-"} unit="A" />
-        <StatCard label="Power factor" value={reading ? reading.powerFactor.toFixed(2) : "-"} />
-      </section>
-
-      <LiveChart points={livePower} />
-
-      <section className="grid">
+      <main className="layout">
+        <Readout reading={reading} />
+        <Gauges reading={reading} />
+        <LiveChart points={livePower} />
         <ForecastCard
           forecast={forecast}
           goal={goal}
           onSaveGoal={(kwh) => meterId && api.setGoal(meterId, kwh).then(setGoal)}
         />
         <AlertList alerts={alerts} />
-      </section>
-
-      <HistoryBars history={history} />
-    </main>
+        <HistoryBars history={history} />
+      </main>
+    </div>
   );
 }

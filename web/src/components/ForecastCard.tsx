@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { Forecast, Goal } from "../api";
-
-const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+import { formatCurrency, formatMonth, formatNumber } from "../format";
+import { Panel } from "./Panel";
 
 interface ForecastCardProps {
   forecast: Forecast | null;
@@ -18,47 +18,74 @@ export function ForecastCard({ forecast, goal, onSaveGoal }: ForecastCardProps) 
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    const value = Number(goalInput);
+    const value = Number(goalInput.replace(",", "."));
     if (value > 0) onSaveGoal(value);
   }
 
-  const overGoal = forecast && goal && forecast.projectedKwh > goal.monthlyGoalKwh;
-
   return (
-    <div className="card forecast">
-      <span className="stat__label">Forecast for {forecast?.month ?? "this month"}</span>
+    <Panel
+      number="03"
+      title="Previsão do mês"
+      aside={forecast ? formatMonth(forecast.month) : undefined}
+      className="panel--forecast"
+    >
       {forecast ? (
-        <>
-          <span className="forecast__cost">{currency.format(forecast.projectedCost)}</span>
-          <span className="muted">
-            {forecast.projectedKwh.toFixed(1)} kWh projected · {forecast.consumedSoFarKwh.toFixed(2)} kWh so far ·{" "}
-            {currency.format(forecast.tariffPerKwh)}/kWh
-          </span>
-        </>
+        <div className="forecast">
+          <p className="forecast__cost" data-testid="forecast-cost">
+            {formatCurrency(forecast.projectedCost)}
+          </p>
+          <dl className="forecast__facts">
+            <div>
+              <dt>Previsto no mês</dt>
+              <dd>{formatNumber(forecast.projectedKwh, 1)} kWh</dd>
+            </div>
+            <div>
+              <dt>Consumido até agora</dt>
+              <dd>{formatNumber(forecast.consumedSoFarKwh, 2)} kWh</dd>
+            </div>
+            <div>
+              <dt>Tarifa</dt>
+              <dd>{formatCurrency(forecast.tariffPerKwh)}/kWh</dd>
+            </div>
+          </dl>
+          {goal && <GoalMeter projectedKwh={forecast.projectedKwh} goalKwh={goal.monthlyGoalKwh} />}
+        </div>
       ) : (
-        <span className="muted">Calculating...</span>
+        <p className="empty">Calculando a previsão…</p>
       )}
 
       <form className="goal" onSubmit={submit}>
-        <label htmlFor="goal-input">Monthly goal (kWh)</label>
+        <label htmlFor="goal-input">Meta mensal (kWh)</label>
         <div className="goal__row">
           <input
             id="goal-input"
-            type="number"
-            min="1"
-            step="any"
+            type="text"
+            inputMode="decimal"
             value={goalInput}
             onChange={(e) => setGoalInput(e.target.value)}
-            placeholder="e.g. 150"
+            placeholder="ex.: 150"
           />
-          <button type="submit">Save goal</button>
+          <button type="submit">Salvar meta</button>
         </div>
-        {goal && (
-          <span className={overGoal ? "goal__status goal__status--over" : "goal__status"}>
-            {overGoal ? "Projection is above the goal" : "Projection is within the goal"}
-          </span>
-        )}
       </form>
+    </Panel>
+  );
+}
+
+function GoalMeter({ projectedKwh, goalKwh }: { projectedKwh: number; goalKwh: number }) {
+  const ratio = projectedKwh / goalKwh;
+  const over = ratio > 1;
+
+  return (
+    <div className={over ? "goal-meter goal-meter--over" : "goal-meter"}>
+      <div className="goal-meter__track" aria-hidden="true">
+        <div className="goal-meter__fill" style={{ width: `${Math.min(ratio, 1) * 100}%` }} />
+      </div>
+      <p className="goal-meter__status" role="status">
+        {over
+          ? `Previsão acima da meta: ${formatNumber(ratio * 100)}% de ${formatNumber(goalKwh)} kWh`
+          : `Previsão dentro da meta: ${formatNumber(ratio * 100)}% de ${formatNumber(goalKwh)} kWh`}
+      </p>
     </div>
   );
 }

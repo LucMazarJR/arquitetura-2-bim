@@ -1,29 +1,35 @@
 import type { MinuteConsumption } from "../api";
+import { formatNumber, formatTime } from "../format";
+import { Panel } from "./Panel";
 
 export function HistoryBars({ history }: { history: MinuteConsumption[] }) {
   const totalKwh = history.reduce((sum, m) => sum + m.consumptionKwh, 0);
   const maxPower = Math.max(1, ...history.map((m) => m.averagePowerW));
 
   return (
-    <div className="card">
-      <div className="chart__header">
-        <span>Last hour (average power per minute)</span>
-        <span className="muted">{totalKwh.toFixed(3)} kWh</span>
-      </div>
+    <Panel
+      number="05"
+      title="Última hora"
+      aside={`${formatNumber(totalKwh, 3)} kWh consumidos`}
+      className="panel--wide"
+    >
       {history.length === 0 ? (
-        <p className="muted">No history yet.</p>
+        <p className="empty">Ainda sem histórico.</p>
       ) : (
-        <div className="bars">
-          {history.map((m) => (
-            <div
-              key={m.minute}
-              className="bars__bar"
-              style={{ height: `${(m.averagePowerW / maxPower) * 100}%` }}
-              title={`${new Date(m.minute).toLocaleTimeString()} · ${m.averagePowerW} W avg · ${m.maxPowerW} W max`}
-            />
-          ))}
-        </div>
+        <>
+          <div className="bars" role="img" aria-label="Potência média por minuto na última hora">
+            {history.map((m, index) => (
+              <div
+                key={m.minute}
+                className={index === history.length - 1 ? "bars__bar bars__bar--current" : "bars__bar"}
+                style={{ height: `${Math.max((m.averagePowerW / maxPower) * 100, 2)}%` }}
+                title={`${formatTime(m.minute)} · média ${formatNumber(m.averagePowerW)} W · pico ${formatNumber(m.maxPowerW)} W`}
+              />
+            ))}
+          </div>
+          <p className="caption">Potência média por minuto. A última barra é o minuto atual.</p>
+        </>
       )}
-    </div>
+    </Panel>
   );
 }
