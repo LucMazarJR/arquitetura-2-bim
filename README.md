@@ -123,6 +123,8 @@ npm run metrics    # Ca, Ce, instabilidade, abstração e distância da sequênc
 cd e2e             # com a stack rodando (docker compose up)
 npm install && npx playwright install chromium
 npm test           # API com token, dashboard ao vivo, alerta até o e-mail, meta mensal
+npm run test:headed  # mesma coisa, com a janela do navegador visível (SLOW_MO=700 deixa em câmera lenta)
+npm run test:ui      # modo interativo: escolhe o teste, roda passo a passo e mostra a linha do tempo
 ```
 
 ## Documento ↔ código

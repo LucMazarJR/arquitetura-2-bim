@@ -11,6 +11,7 @@ export default defineConfig({
     baseURL: process.env.APP_URL ?? "http://localhost:8080",
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
+    launchOptions: { slowMo: Number(process.env.SLOW_MO ?? 0) },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 });
