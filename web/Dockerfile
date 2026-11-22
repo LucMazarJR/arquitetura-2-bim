@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+ARG VITE_API_TOKEN=dev-token
+ENV VITE_API_TOKEN=$VITE_API_TOKEN
 RUN npm run build
 
 FROM nginx:1.27-alpine

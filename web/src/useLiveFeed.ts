@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { LiveMessage } from "./api";
+import { liveFeedUrl, type LiveMessage } from "./api";
 
 export function useLiveFeed(onMessage: (message: LiveMessage) => void): boolean {
   const handler = useRef(onMessage);
@@ -12,8 +12,7 @@ export function useLiveFeed(onMessage: (message: LiveMessage) => void): boolean 
     let stopped = false;
 
     const connect = () => {
-      const protocol = location.protocol === "https:" ? "wss" : "ws";
-      socket = new WebSocket(`${protocol}://${location.host}/ws`);
+      socket = new WebSocket(liveFeedUrl());
       socket.onopen = () => setConnected(true);
       socket.onmessage = (event) => handler.current(JSON.parse(event.data));
       socket.onclose = () => {

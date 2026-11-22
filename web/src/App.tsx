@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, type Alert, type Forecast, type Meter, type MinuteConsumption, type Reading } from "./api";
+import { api, type Alert, type Forecast, type Goal, type Meter, type MinuteConsumption, type Reading } from "./api";
 import { AlertList } from "./components/AlertList";
 import { ForecastCard } from "./components/ForecastCard";
 import { HistoryBars } from "./components/HistoryBars";
@@ -17,6 +17,7 @@ export function App() {
   const [history, setHistory] = useState<MinuteConsumption[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [forecast, setForecast] = useState<Forecast | null>(null);
+  const [goal, setGoal] = useState<Goal | null>(null);
 
   useEffect(() => {
     const loadMeters = async () => {
@@ -37,6 +38,7 @@ export function App() {
     const loadHistory = async () => setHistory((await api.consumption(meterId)) ?? []);
     api.alerts(meterId).then((list) => setAlerts(list ?? []));
     api.forecast(meterId).then(setForecast);
+    api.goal(meterId).then(setGoal);
     loadHistory();
 
     const timer = window.setInterval(loadHistory, 30_000);
@@ -82,7 +84,11 @@ export function App() {
       <LiveChart points={livePower} />
 
       <section className="grid">
-        <ForecastCard forecast={forecast} />
+        <ForecastCard
+          forecast={forecast}
+          goal={goal}
+          onSaveGoal={(kwh) => meterId && api.setGoal(meterId, kwh).then(setGoal)}
+        />
         <AlertList alerts={alerts} />
       </section>
 

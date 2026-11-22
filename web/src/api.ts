@@ -31,6 +31,12 @@ export interface Forecast {
   calculatedAt: string;
 }
 
+export interface Goal {
+  meterId: string;
+  monthlyGoalKwh: number;
+  updatedAt: string;
+}
+
 export interface Meter {
   meterId: string;
   homeId: string;
@@ -50,15 +56,28 @@ export type LiveMessage =
   | { type: "alert"; data: Alert & { meterId: string } }
   | { type: "forecast"; data: Forecast };
 
-async function getJson<T>(path: string): Promise<T | null> {
-  const response = await fetch(path);
+const API_TOKEN: string = import.meta.env.VITE_API_TOKEN ?? "dev-token";
+
+export function liveFeedUrl(): string {
+  const protocol = location.protocol === "https:" ? "wss" : "ws";
+  return `${protocol}://${location.host}/ws?token=${encodeURIComponent(API_TOKEN)}`;
+}
+
+async function request<T>(path: string, init: RequestInit = {}): Promise<T | null> {
+  const response = await fetch(path, {
+    ...init,
+    headers: { Authorization: `Bearer ${API_TOKEN}`, "Content-Type": "application/json" },
+  });
   if (!response.ok) return null;
   return response.json() as Promise<T>;
 }
 
 export const api = {
-  meters: () => getJson<Meter[]>("/api/meters"),
-  consumption: (meterId: string) => getJson<MinuteConsumption[]>(`/api/meters/${meterId}/consumption?minutes=60`),
-  alerts: (meterId: string) => getJson<Alert[]>(`/api/meters/${meterId}/alerts`),
-  forecast: (meterId: string) => getJson<Forecast>(`/api/meters/${meterId}/forecast`),
+  meters: () => request<Meter[]>("/api/meters"),
+  consumption: (meterId: string) => request<MinuteConsumption[]>(`/api/meters/${meterId}/consumption?minutes=60`),
+  alerts: (meterId: string) => request<Alert[]>(`/api/meters/${meterId}/alerts`),
+  forecast: (meterId: string) => request<Forecast>(`/api/meters/${meterId}/forecast`),
+  goal: (meterId: string) => request<Goal>(`/api/meters/${meterId}/goal`),
+  setGoal: (meterId: string, monthlyGoalKwh: number) =>
+    request<Goal>(`/api/meters/${meterId}/goal`, { method: "PUT", body: JSON.stringify({ monthlyGoalKwh }) }),
 };

@@ -1,14 +1,21 @@
-import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Put, Query } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Put,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
+import { ApiTokenGuard } from "./api-token.guard";
 import { MonitoringService } from "./monitoring.service";
 
 @Controller("api")
+@UseGuards(ApiTokenGuard)
 export class MonitoringController {
   constructor(private readonly monitoring: MonitoringService) {}
-
-  @Get("health")
-  health() {
-    return { status: "ok" };
-  }
 
   @Get("meters")
   meters() {

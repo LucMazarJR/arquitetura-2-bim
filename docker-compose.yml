@@ -55,6 +55,7 @@ services:
       MQTT_CLIENT_ID: ${BACKEND_MQTT_CLIENT_ID:-backend-ingestion-1}
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
+      API_TOKEN: ${API_TOKEN:-dev-token}
     ports:
       - "3000:3000"
     depends_on:
@@ -80,7 +81,10 @@ services:
     restart: unless-stopped
 
   web:
-    build: ./web
+    build:
+      context: ./web
+      args:
+        VITE_API_TOKEN: ${API_TOKEN:-dev-token}
     ports:
       - "8080:80"
     depends_on:
