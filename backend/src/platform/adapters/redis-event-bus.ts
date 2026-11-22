@@ -43,8 +43,8 @@ export class RedisEventBus implements EventBus, OnModuleDestroy {
 
     while (this.running) {
       try {
-        const result = (await reader.call(
-          "XREADGROUP", "GROUP", group, consumer, "COUNT", "50", "BLOCK", "5000", "STREAMS", stream, lastId,
+        const result = (await reader.xreadgroup(
+          "GROUP", group, consumer, "COUNT", 50, "BLOCK", 5000, "STREAMS", stream, lastId,
         )) as ReadResult;
         const messages = result?.[0]?.[1] ?? [];
 
