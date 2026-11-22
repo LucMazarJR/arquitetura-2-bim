@@ -1,5 +1,5 @@
 #include <WiFi.h>
-#include <PubSubClient.h>
+#include <MQTT.h>
 #include <time.h>
 
 const char* WIFI_SSID = "Wokwi-GUEST";
@@ -17,6 +17,7 @@ const int VOLTAGE_DROP_PIN = 26;
 
 const unsigned long PUBLISH_INTERVAL_MS = 2000;
 const float SHOWER_POWER_W = 5500;
+const int MQTT_QOS = 1;
 
 struct MeterReading {
   float voltage;
@@ -28,7 +29,7 @@ struct MeterReading {
 };
 
 WiFiClient wifiClient;
-PubSubClient mqtt(wifiClient);
+MQTTClient mqtt(256);
 
 char topic[96];
 double energyWh = 1250000;
@@ -78,7 +79,7 @@ void connectMqtt() {
     if (mqtt.connect(clientId.c_str())) {
       Serial.println("connected");
     } else {
-      Serial.printf("failed (state %d), retrying\n", mqtt.state());
+      Serial.printf("failed (error %d), retrying\n", mqtt.lastError());
       delay(2000);
     }
   }
@@ -90,8 +91,8 @@ void publishReading(const MeterReading& r) {
     "{\"v\":%.1f,\"i\":%.2f,\"p\":%.1f,\"e\":%.0f,\"f\":%.2f,\"pf\":%.2f,\"ts\":%ld}",
     r.voltage, r.current, r.power, r.energyWh, r.frequency, r.powerFactor, (long) time(nullptr));
 
-  mqtt.publish(topic, payload);
-  Serial.printf("%s %s\n", topic, payload);
+  bool delivered = mqtt.publish(topic, payload, false, MQTT_QOS);
+  Serial.printf("%s %s %s\n", delivered ? "sent" : "FAILED", topic, payload);
 }
 
 void setup() {
@@ -103,7 +104,7 @@ void setup() {
 
   connectWifi();
   syncClock();
-  mqtt.setServer(MQTT_HOST, MQTT_PORT);
+  mqtt.begin(MQTT_HOST, MQTT_PORT, wifiClient);
   connectMqtt();
 }
 
