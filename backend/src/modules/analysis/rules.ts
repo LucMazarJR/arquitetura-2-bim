@@ -15,6 +15,9 @@ export interface Rule {
   check(reading: ReadingValidated): Violation | null;
 }
 
+const formatNumber = (value: number, decimals = 0) =>
+  value.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+
 export class PowerAboveLimit implements Rule {
   readonly name = "power-above-limit";
 
@@ -24,7 +27,7 @@ export class PowerAboveLimit implements Rule {
     if (reading.powerW <= this.limitW) return null;
     return {
       severity: "warning",
-      message: `High consumption: ${Math.round(reading.powerW)} W (limit ${this.limitW} W)`,
+      message: `Consumo alto: ${formatNumber(reading.powerW)} W (limite de ${formatNumber(this.limitW)} W)`,
       measuredValue: reading.powerW,
       limit: this.limitW,
     };
@@ -42,7 +45,7 @@ export class VoltageOutOfRange implements Rule {
     const tooLow = voltage < this.minV;
     return {
       severity: "critical",
-      message: `Voltage too ${tooLow ? "low" : "high"}: ${voltage.toFixed(1)} V (expected ${this.minV}-${this.maxV} V)`,
+      message: `Tensão ${tooLow ? "baixa" : "alta"}: ${formatNumber(voltage, 1)} V (faixa adequada de ${this.minV} a ${this.maxV} V)`,
       measuredValue: voltage,
       limit: tooLow ? this.minV : this.maxV,
     };
@@ -63,7 +66,7 @@ export class HighNightConsumption implements Rule {
     if (!isNight || reading.powerW <= this.limitW) return null;
     return {
       severity: "warning",
-      message: `Unusual consumption at night: ${Math.round(reading.powerW)} W at ${hour}h (limit ${this.limitW} W)`,
+      message: `Consumo anormal na madrugada: ${formatNumber(reading.powerW)} W às ${hour}h (limite de ${formatNumber(this.limitW)} W)`,
       measuredValue: reading.powerW,
       limit: this.limitW,
     };
@@ -77,7 +80,7 @@ export function checkMonthlyGoal(forecast: ForecastUpdated, goalKwh: number): Go
     return {
       rule: "monthly-goal-exceeded",
       severity: "critical",
-      message: `Monthly goal exceeded: ${forecast.consumedSoFarKwh.toFixed(1)} kWh used (goal ${goalKwh} kWh)`,
+      message: `Meta mensal excedida: ${formatNumber(forecast.consumedSoFarKwh, 1)} kWh consumidos (meta de ${formatNumber(goalKwh)} kWh)`,
       measuredValue: forecast.consumedSoFarKwh,
       limit: goalKwh,
     };
@@ -86,7 +89,7 @@ export function checkMonthlyGoal(forecast: ForecastUpdated, goalKwh: number): Go
     return {
       rule: "monthly-goal-at-risk",
       severity: "warning",
-      message: `At the current pace the month ends at ${forecast.projectedKwh.toFixed(1)} kWh (goal ${goalKwh} kWh)`,
+      message: `Meta em risco: no ritmo atual, o mês fecha em ${formatNumber(forecast.projectedKwh, 1)} kWh (meta de ${formatNumber(goalKwh)} kWh)`,
       measuredValue: forecast.projectedKwh,
       limit: goalKwh,
     };
