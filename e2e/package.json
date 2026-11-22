@@ -1,0 +1,14 @@
+{
+  "name": "energy-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "End-to-end tests against the running docker compose stack",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^22.20.5",
+    "mqtt": "^5.16.1"
+  }
+}
