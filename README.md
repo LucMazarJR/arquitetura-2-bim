@@ -74,6 +74,8 @@ docker compose up --build
 
 O simulador já sobe junto, publicando leituras de duas casas a cada 2 s. De tempos em tempos ele liga o chuveiro (5.500 W, o que dispara um alerta de potência) e simula uma queda de tensão (o que dispara um alerta de tensão). Os alertas aparecem no app e chegam por e-mail no Mailpit. No app também dá para definir a meta mensal (kWh): quando a previsão do mês passa da meta, a Analysis gera um alerta.
 
+Para projetor, use o botão **Alto contraste** no topo do app (só preto e branco, bordas e letras maiores) ou abra direto http://localhost:8080/?contraste=alto. A escolha fica salva no navegador.
+
 O token da API vem da variável `API_TOKEN` (padrão `dev-token`) e é usado tanto pelo backend quanto pelo build do app.
 
 ```bash
@@ -102,15 +104,24 @@ MODULES=analysis,notification npm start
 
 ## Usando o ESP32 no Wokwi
 
-1. Crie um projeto ESP32 em https://wokwi.com e cole o conteúdo de `firmware/sketch.ino`, `firmware/diagram.json` e `firmware/libraries.txt`.
-2. Na simulação: o potenciômetro controla a carga da casa (80–3.000 W), a chave liga o chuveiro (+5.500 W) e o botão vermelho simula uma queda de tensão.
-3. O firmware usa a biblioteca `MQTT` (arduino-mqtt) e publica com QoS 1 no broker público `broker.emqx.io`. Para o backend ler de lá:
+Testado em 22/11/2026: o ESP32 simulado compila, conecta, publica no broker público e as leituras chegam ao app, inclusive com o alerta de consumo alto.
 
-```bash
-BACKEND_MQTT_URL=mqtt://broker.emqx.io:1883 BACKEND_MQTT_CLIENT_ID=backend-ingestion-<algo-unico> docker compose up --build
+1. Abra https://wokwi.com/projects/new/esp32 (não precisa de login para rodar).
+2. Cole o conteúdo de `firmware/sketch.ino` na aba `sketch.ino` e o de `firmware/diagram.json` na aba `diagram.json`.
+3. Biblioteca: na seta ao lado das abas, escolha **New file...**, crie `libraries.txt` e escreva `MQTT` nele. A busca do Library Manager só mostra os primeiros resultados e não acha a `MQTT` exata, mas pelo arquivo ela entra direto.
+4. Clique no botão verde para iniciar. O monitor serial mostra `sent energy/home-wokwi/meter-wokwi/reading {...}` a cada 2 s.
+5. Na simulação: o potenciômetro controla a carga da casa (80 a 3.000 W), a chave liga o chuveiro (+5.500 W, dispara o alerta de consumo alto) e o botão vermelho, enquanto pressionado, simula uma queda de tensão (dispara o alerta de tensão).
+6. O firmware usa a biblioteca `MQTT` (arduino-mqtt) e publica com QoS 1 no broker público `broker.emqx.io`. Para o backend ler de lá (PowerShell):
+
+```powershell
+$env:BACKEND_MQTT_URL = "mqtt://broker.emqx.io:1883"
+$env:BACKEND_MQTT_CLIENT_ID = "backend-ingestion-algo-unico"
+docker compose up -d backend
 ```
 
-O medidor aparece no app como `home-wokwi / meter-wokwi`. Para o hardware real, só a função `readMeter()` muda (passa a ler o PZEM-004T pela biblioteca `PZEM004Tv30`); o formato publicado continua o mesmo.
+O medidor aparece no app como `home-wokwi · meter-wokwi`. Deixe a aba do Wokwi visível (em outra janela, não em aba de fundo): o navegador desacelera abas em segundo plano e a simulação passa a publicar mais devagar. Para voltar ao simulador local, feche o PowerShell (ou apague as duas variáveis) e rode `docker compose up -d backend` de novo.
+
+Para salvar o projeto e ter um link fixo do Wokwi, é preciso entrar com uma conta (gratuita) e clicar em **Save**. No hardware real, só a função `readMeter()` muda (passa a ler o PZEM-004T pela biblioteca `PZEM004Tv30`); o formato publicado continua o mesmo.
 
 ## Testes e métricas
 

@@ -9,6 +9,18 @@ import { useHighContrast } from "./useHighContrast";
 import { useLiveFeed } from "./useLiveFeed";
 
 const MAX_LIVE_POINTS = 90;
+const MAX_ALERTS = 20;
+
+function mergeAlerts(current: Alert[], incoming: Alert[]): Alert[] {
+  const byId = new Map([...current, ...incoming].map((alert) => [alert.alertId, alert]));
+  return [...byId.values()].sort((a, b) => b.raisedAt.localeCompare(a.raisedAt)).slice(0, MAX_ALERTS);
+}
+
+function newest<T>(current: T | null, incoming: T | null, timeField: keyof T): T | null {
+  if (!incoming) return current;
+  if (!current) return incoming;
+  return String(incoming[timeField]) >= String(current[timeField]) ? incoming : current;
+}
 
 export function App() {
   const [meters, setMeters] = useState<Meter[]>([]);
@@ -34,29 +46,42 @@ export function App() {
 
   useEffect(() => {
     if (!meterId) return;
+    let active = true;
+    const ifActive = <T,>(apply: (value: T) => void) => (value: T) => {
+      if (active) apply(value);
+    };
+
     setReading(meters.find((m) => m.meterId === meterId)?.lastReading ?? null);
     setLivePower([]);
+    setAlerts([]);
+    setForecast(null);
+    setGoal(null);
+    setHistory([]);
 
-    const loadHistory = async () => setHistory((await api.consumption(meterId)) ?? []);
-    api.alerts(meterId).then((list) => setAlerts(list ?? []));
-    api.forecast(meterId).then(setForecast);
-    api.goal(meterId).then(setGoal);
+    const loadHistory = () => api.consumption(meterId).then(ifActive((list) => setHistory(list ?? [])));
+    api.alerts(meterId).then(ifActive((list) => setAlerts((current) => mergeAlerts(current, list ?? []))));
+    api.forecast(meterId).then(ifActive((latest) => setForecast((current) => newest(current, latest, "calculatedAt"))));
+    api.goal(meterId).then(ifActive((latest) => setGoal((current) => newest(current, latest, "updatedAt"))));
     loadHistory();
 
     const timer = window.setInterval(loadHistory, 30_000);
-    return () => window.clearInterval(timer);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, [meterId]);
 
   const connected = useLiveFeed((message) => {
     if (message.data.meterId !== meterId) return;
 
     if (message.type === "reading") {
-      setReading(message.data);
-      const point = { time: new Date(message.data.measuredAt).getTime(), powerW: message.data.powerW };
+      const reading = message.data;
+      setReading((current) => newest(current, reading, "measuredAt"));
+      const point = { time: new Date(reading.measuredAt).getTime(), powerW: reading.powerW };
       setLivePower((points) => [...points, point].slice(-MAX_LIVE_POINTS));
     }
-    if (message.type === "alert") setAlerts((list) => [message.data, ...list].slice(0, 20));
-    if (message.type === "forecast") setForecast(message.data);
+    if (message.type === "alert") setAlerts((current) => mergeAlerts(current, [message.data]));
+    if (message.type === "forecast") setForecast((current) => newest(current, message.data, "calculatedAt"));
   });
 
   return (
