@@ -1,5 +1,6 @@
 import { formatNumber } from "../format";
-import { Panel } from "./Panel";
+import { RED_FROM_W, SCALE_MAX_W } from "../levels";
+import { Card } from "./Card";
 
 export interface PowerPoint {
   time: number;
@@ -11,11 +12,15 @@ const HEIGHT = 200;
 
 export function LiveChart({ points }: { points: PowerPoint[] }) {
   const peak = Math.max(0, ...points.map((p) => p.powerW));
-  const scaleMax = Math.max(1000, peak) * 1.1;
-  const aside = points.length > 0 ? `${points.length} leituras · pico de ${formatNumber(peak)} W` : undefined;
+  const scaleMax = Math.max(SCALE_MAX_W, peak * 1.1);
+  const redZoneY = HEIGHT - (RED_FROM_W / scaleMax) * HEIGHT;
+  const aside =
+    points.length > 0
+      ? `${points.length} leituras · faixa vermelha acima de ${formatNumber(RED_FROM_W)} W`
+      : undefined;
 
   return (
-    <Panel number="02" title="Potência ao vivo" aside={aside} className="panel--chart">
+    <Card title="Potência ao vivo" aside={aside} className="card--chart">
       {points.length < 2 ? (
         <p className="empty">Aguardando leituras ao vivo…</p>
       ) : (
@@ -25,30 +30,24 @@ export function LiveChart({ points }: { points: PowerPoint[] }) {
             <span>0 W</span>
           </div>
           <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" role="img" aria-label="Gráfico da potência ao vivo">
-            <line className="chart__grid" x1="0" y1={HEIGHT / 2} x2={WIDTH} y2={HEIGHT / 2} />
-            <polygon className="chart__area" points={toArea(points, scaleMax)} />
+            <rect className="chart__red-zone" x="0" y="0" width={WIDTH} height={redZoneY} />
+            <line className="chart__limit" x1="0" y1={redZoneY} x2={WIDTH} y2={redZoneY} />
             <polyline className="chart__line" points={toLine(points, scaleMax)} />
           </svg>
         </div>
       )}
-    </Panel>
+    </Card>
   );
 }
 
-function toCoordinates(points: PowerPoint[], scaleMax: number): string[] {
+function toLine(points: PowerPoint[], scaleMax: number): string {
   const first = points[0].time;
   const span = Math.max(points[points.length - 1].time - first, 1);
-  return points.map((p) => {
-    const x = ((p.time - first) / span) * WIDTH;
-    const y = HEIGHT - (p.powerW / scaleMax) * HEIGHT;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-}
-
-function toLine(points: PowerPoint[], scaleMax: number): string {
-  return toCoordinates(points, scaleMax).join(" ");
-}
-
-function toArea(points: PowerPoint[], scaleMax: number): string {
-  return `0,${HEIGHT} ${toLine(points, scaleMax)} ${WIDTH},${HEIGHT}`;
+  return points
+    .map((p) => {
+      const x = ((p.time - first) / span) * WIDTH;
+      const y = HEIGHT - (p.powerW / scaleMax) * HEIGHT;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
 }

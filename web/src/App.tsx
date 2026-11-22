@@ -4,7 +4,8 @@ import { AlertList } from "./components/AlertList";
 import { ForecastCard } from "./components/ForecastCard";
 import { HistoryBars } from "./components/HistoryBars";
 import { LiveChart, type PowerPoint } from "./components/LiveChart";
-import { Gauges, Readout } from "./components/Readout";
+import { LevelBanner } from "./components/LevelBanner";
+import { Measurements } from "./components/Measurements";
 import { useHighContrast } from "./useHighContrast";
 import { useLiveFeed } from "./useLiveFeed";
 
@@ -87,41 +88,44 @@ export function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand">
-          <svg className="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
-            <rect width="32" height="32" />
-            <path d="M18 4 8 18h7l-2 10 11-15h-7z" />
-          </svg>
-          <div>
-            <h1 className="brand__name">Monitor de Energia</h1>
-            <p className="brand__sub">Painel do medidor residencial</p>
+        <div className="topbar__inner">
+          <div className="brand">
+            <span className="brand__mark" aria-hidden="true">
+              <span className="brand__flag brand__flag--green" />
+              <span className="brand__flag brand__flag--yellow" />
+              <span className="brand__flag brand__flag--red" />
+            </span>
+            <div>
+              <h1 className="brand__name">Monitor de Energia</h1>
+              <p className="brand__sub">Saiba em que nível está o consumo da sua casa</p>
+            </div>
           </div>
-        </div>
 
-        <div className="topbar__controls">
-          <label className="field">
-            <span>Medidor</span>
-            <select value={meterId ?? ""} onChange={(e) => setMeterId(e.target.value)}>
-              {meters.length === 0 && <option value="">Nenhum medidor ainda</option>}
-              {meters.map((m) => (
-                <option key={m.meterId} value={m.meterId}>
-                  {m.homeId} · {m.meterId}
-                </option>
-              ))}
-            </select>
-          </label>
-          <span className={connected ? "status status--on" : "status"} role="status">
-            {connected ? "Ao vivo" : "Desconectado"}
-          </span>
-          <button type="button" className="toggle" aria-pressed={highContrast} onClick={toggleHighContrast}>
-            Alto contraste: {highContrast ? "ligado" : "desligado"}
-          </button>
+          <div className="topbar__controls">
+            <label className="field">
+              <span>Medidor</span>
+              <select value={meterId ?? ""} onChange={(e) => setMeterId(e.target.value)}>
+                {meters.length === 0 && <option value="">Nenhum medidor ainda</option>}
+                {meters.map((m) => (
+                  <option key={m.meterId} value={m.meterId}>
+                    {m.homeId} · {m.meterId}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <span className={connected ? "status status--on" : "status"} role="status">
+              {connected ? "Ao vivo" : "Desconectado"}
+            </span>
+            <button type="button" className="toggle" aria-pressed={highContrast} onClick={toggleHighContrast}>
+              Alto contraste: {highContrast ? "ligado" : "desligado"}
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="layout">
-        <Readout reading={reading} />
-        <Gauges reading={reading} />
+        <LevelBanner reading={reading} />
+        <Measurements reading={reading} />
         <LiveChart points={livePower} />
         <ForecastCard
           forecast={forecast}
