@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import type { ReadingRecorded } from "../../contracts/events";
+import type { ReadingValidated } from "../../contracts/events";
 import { Database } from "../../platform/ports";
 
 @Injectable()
 export class ReadingRepository {
   constructor(private readonly db: Database) {}
 
-  async save(r: ReadingRecorded): Promise<boolean> {
+  async save(r: ReadingValidated): Promise<boolean> {
     const rows = await this.db.query(
       `INSERT INTO ingestion.readings
          (reading_id, home_id, meter_id, measured_at, voltage_v, current_a, power_w,

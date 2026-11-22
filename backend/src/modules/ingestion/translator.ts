@@ -1,4 +1,4 @@
-import type { ReadingRecorded } from "../../contracts/events";
+import type { ReadingValidated } from "../../contracts/events";
 
 export interface DeviceReading {
   v: number;
@@ -22,7 +22,7 @@ export function parseTopic(topic: string): ReadingOrigin | null {
   return match ? { homeId: match[1], meterId: match[2] } : null;
 }
 
-export function translate(origin: ReadingOrigin, reading: DeviceReading): ReadingRecorded {
+export function translate(origin: ReadingOrigin, reading: DeviceReading): ReadingValidated {
   return {
     readingId: `${origin.meterId}:${reading.ts}`,
     homeId: origin.homeId,

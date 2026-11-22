@@ -1,4 +1,4 @@
-import type { ReadingRecorded, Severity } from "../../contracts/events";
+import type { ReadingValidated, Severity } from "../../contracts/events";
 import type { AnalysisConfig } from "./analysis.config";
 
 export const RULES = "ANALYSIS_RULES";
@@ -12,7 +12,7 @@ export interface Violation {
 
 export interface Rule {
   readonly name: string;
-  check(reading: ReadingRecorded): Violation | null;
+  check(reading: ReadingValidated): Violation | null;
 }
 
 export class PowerAboveLimit implements Rule {
@@ -20,7 +20,7 @@ export class PowerAboveLimit implements Rule {
 
   constructor(private readonly limitW: number) {}
 
-  check(reading: ReadingRecorded): Violation | null {
+  check(reading: ReadingValidated): Violation | null {
     if (reading.powerW <= this.limitW) return null;
     return {
       severity: "warning",
@@ -36,7 +36,7 @@ export class VoltageOutOfRange implements Rule {
 
   constructor(private readonly minV: number, private readonly maxV: number) {}
 
-  check(reading: ReadingRecorded): Violation | null {
+  check(reading: ReadingValidated): Violation | null {
     const voltage = reading.voltageV;
     if (voltage >= this.minV && voltage <= this.maxV) return null;
     const tooLow = voltage < this.minV;

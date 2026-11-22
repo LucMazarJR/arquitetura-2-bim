@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import type { AlertRaised, ReadingRecorded } from "../../contracts/events";
+import type { AlertRaised, ReadingValidated } from "../../contracts/events";
 import { Database } from "../../platform/ports";
 
 @Injectable()
 export class ReadModel {
   constructor(private readonly db: Database) {}
 
-  async addReading(r: ReadingRecorded): Promise<void> {
+  async addReading(r: ReadingValidated): Promise<void> {
     await this.db.query(
       `INSERT INTO monitoring.consumption_per_minute AS c
          (meter_id, home_id, minute, energy_min_kwh, energy_max_kwh, power_min_w, power_max_w)

@@ -10,7 +10,7 @@ export interface Envelope<TType extends string, TData> {
   data: TData;
 }
 
-export interface ReadingRecorded {
+export interface ReadingValidated {
   readingId: string;
   homeId: string;
   meterId: string;
@@ -48,12 +48,12 @@ export interface ForecastUpdated {
   calculatedAt: string;
 }
 
-export type ReadingRecordedEvent = Envelope<"reading.recorded", ReadingRecorded>;
-export type AlertRaisedEvent = Envelope<"alert.raised", AlertRaised>;
-export type ForecastUpdatedEvent = Envelope<"forecast.updated", ForecastUpdated>;
+export type ReadingValidatedEvent = Envelope<"leitura.validada", ReadingValidated>;
+export type AlertRaisedEvent = Envelope<"alerta.gerado", AlertRaised>;
+export type ForecastUpdatedEvent = Envelope<"previsao.atualizada", ForecastUpdated>;
 
 export interface Streams {
-  readings: ReadingRecordedEvent;
+  readings: ReadingValidatedEvent;
   alerts: AlertRaisedEvent;
   forecasts: ForecastUpdatedEvent;
 }

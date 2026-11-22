@@ -36,14 +36,14 @@ describe("rules", () => {
 });
 
 describe("AnalysisService", () => {
-  it("publishes alert.raised keeping the reading's correlationId", async () => {
+  it("publishes alerta.gerado keeping the reading's correlationId", async () => {
     const { bus, analysis } = setup();
     const reading = readingEvent({ powerW: 5600 });
 
     await analysis.analyze(reading);
 
     const [alert] = bus.eventsOf("alerts");
-    expect(alert.type).toBe("alert.raised");
+    expect(alert.type).toBe("alerta.gerado");
     expect(alert.data.rule).toBe("power-above-limit");
     expect(alert.correlationId).toBe(reading.correlationId);
   });

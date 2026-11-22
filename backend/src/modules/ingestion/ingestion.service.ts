@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
-import { createEvent, type ReadingRecordedEvent } from "../../contracts/events";
+import { createEvent, type ReadingValidatedEvent } from "../../contracts/events";
 import { EventBus } from "../../platform/ports";
 import { ReadingRepository } from "./reading.repository";
 import { parseTopic, translate } from "./translator";
@@ -40,7 +40,7 @@ export class IngestionService implements OnModuleInit, OnModuleDestroy {
     const isNew = await this.repository.save(reading);
     if (!isNew) return "duplicate";
 
-    await this.bus.publish("readings", createEvent<ReadingRecordedEvent>("reading.recorded", reading, "ingestion"));
+    await this.bus.publish("readings", createEvent<ReadingValidatedEvent>("leitura.validada", reading, "ingestion"));
     this.recordedCount++;
     return "recorded";
   }

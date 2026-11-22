@@ -53,13 +53,13 @@ describe("validator", () => {
 });
 
 describe("IngestionService", () => {
-  it("saves a valid reading and publishes reading.recorded", async () => {
+  it("saves a valid reading and publishes leitura.validada", async () => {
     const { bus, ingestion } = setup();
 
     expect(await ingestion.handleMessage(TOPIC, devicePayload())).toBe("recorded");
 
     const [event] = bus.eventsOf("readings");
-    expect(event.type).toBe("reading.recorded");
+    expect(event.type).toBe("leitura.validada");
     expect(event.data.meterId).toBe("meter-01");
     expect(event.data.energyKwh).toBe(1250);
   });

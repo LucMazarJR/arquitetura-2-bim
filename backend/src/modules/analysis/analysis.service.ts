@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
-import { createEvent, type AlertRaised, type AlertRaisedEvent, type ReadingRecordedEvent } from "../../contracts/events";
+import { createEvent, type AlertRaised, type AlertRaisedEvent, type ReadingValidatedEvent } from "../../contracts/events";
 import { Cache, EventBus } from "../../platform/ports";
 import { AlertRepository } from "./alert.repository";
 import { analysisConfig, type AnalysisConfig } from "./analysis.config";
@@ -23,7 +23,7 @@ export class AnalysisService implements OnModuleInit {
     this.logger.log(`analyzing readings with rules: ${this.rules.map((r) => r.name).join(", ")}`);
   }
 
-  async analyze(event: ReadingRecordedEvent): Promise<AlertRaised[]> {
+  async analyze(event: ReadingValidatedEvent): Promise<AlertRaised[]> {
     const reading = event.data;
     const alerts: AlertRaised[] = [];
 
@@ -45,7 +45,7 @@ export class AnalysisService implements OnModuleInit {
       };
 
       await this.repository.save(alert);
-      await this.bus.publish("alerts", createEvent<AlertRaisedEvent>("alert.raised", alert, "analysis", event.correlationId));
+      await this.bus.publish("alerts", createEvent<AlertRaisedEvent>("alerta.gerado", alert, "analysis", event.correlationId));
       this.logger.log(`alert raised for ${reading.meterId}: ${alert.message}`);
       alerts.push(alert);
     }

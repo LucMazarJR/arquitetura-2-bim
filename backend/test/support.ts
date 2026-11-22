@@ -1,4 +1,4 @@
-import { createEvent, type ReadingRecorded, type ReadingRecordedEvent } from "../src/contracts/events";
+import { createEvent, type ReadingValidated, type ReadingValidatedEvent } from "../src/contracts/events";
 import type { Database } from "../src/platform/ports";
 
 export function createFakeDatabase(): Database {
@@ -30,8 +30,8 @@ export function devicePayload(overrides: Record<string, unknown> = {}) {
   };
 }
 
-export function readingEvent(overrides: Partial<ReadingRecorded> = {}): ReadingRecordedEvent {
-  const reading: ReadingRecorded = {
+export function readingEvent(overrides: Partial<ReadingValidated> = {}): ReadingValidatedEvent {
+  const reading: ReadingValidated = {
     readingId: "meter-01:1",
     homeId: "home-01",
     meterId: "meter-01",
@@ -44,5 +44,5 @@ export function readingEvent(overrides: Partial<ReadingRecorded> = {}): ReadingR
     powerFactor: 0.98,
     ...overrides,
   };
-  return createEvent<ReadingRecordedEvent>("reading.recorded", reading, "test");
+  return createEvent<ReadingValidatedEvent>("leitura.validada", reading, "test");
 }

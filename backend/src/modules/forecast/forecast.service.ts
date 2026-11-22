@@ -3,7 +3,7 @@ import {
   createEvent,
   type ForecastUpdated,
   type ForecastUpdatedEvent,
-  type ReadingRecordedEvent,
+  type ReadingValidatedEvent,
 } from "../../contracts/events";
 import { EventBus } from "../../platform/ports";
 import { forecastConfig, type ForecastConfig } from "./forecast.config";
@@ -32,7 +32,7 @@ export class ForecastService implements OnModuleInit {
     this.logger.log(`forecasting monthly consumption (tariff R$ ${this.config.tariffPerKwh}/kWh)`);
   }
 
-  async update(event: ReadingRecordedEvent): Promise<ForecastUpdated | null> {
+  async update(event: ReadingValidatedEvent): Promise<ForecastUpdated | null> {
     const reading = event.data;
     const now = new Date(reading.measuredAt);
 
@@ -69,7 +69,7 @@ export class ForecastService implements OnModuleInit {
     await this.repository.save(forecast);
     await this.bus.publish(
       "forecasts",
-      createEvent<ForecastUpdatedEvent>("forecast.updated", forecast, "forecast", event.correlationId),
+      createEvent<ForecastUpdatedEvent>("previsao.atualizada", forecast, "forecast", event.correlationId),
     );
     state.lastPublishedAt = now.getTime();
 
