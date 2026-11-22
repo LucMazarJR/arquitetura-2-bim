@@ -5,6 +5,7 @@ import { GoalRepository } from "../src/modules/analysis/goal.repository";
 import {
   checkMonthlyGoal,
   defaultRules,
+  HighNightConsumption,
   PowerAboveLimit,
   VoltageOutOfRange,
   type Rule,
@@ -13,7 +14,14 @@ import { MemoryCache } from "../src/platform/adapters/memory-cache";
 import { MemoryEventBus } from "../src/platform/adapters/memory-event-bus";
 import { createFakeDatabase, forecastEvent, readingEvent } from "./support";
 
-const config: AnalysisConfig = { powerLimitW: 4500, minVoltageV: 202, maxVoltageV: 231, cooldownSeconds: 120 };
+const config: AnalysisConfig = {
+  powerLimitW: 4500,
+  minVoltageV: 202,
+  maxVoltageV: 231,
+  nightPowerLimitW: 800,
+  timeZone: "America/Sao_Paulo",
+  cooldownSeconds: 120,
+};
 
 function setup(options: { now?: () => number; rules?: Rule[] } = {}) {
   const bus = new MemoryEventBus();
@@ -42,6 +50,16 @@ describe("rules", () => {
     expect(rule.check(readingEvent({ voltageV: 220 }).data)).toBeNull();
     expect(rule.check(readingEvent({ voltageV: 195 }).data)).toMatchObject({ severity: "critical", limit: 202 });
     expect(rule.check(readingEvent({ voltageV: 240 }).data)).toMatchObject({ severity: "critical", limit: 231 });
+  });
+
+  it("high consumption at night (local time)", () => {
+    const rule = new HighNightConsumption(800, "America/Sao_Paulo");
+    expect(rule.check(readingEvent({ powerW: 1500, measuredAt: "2026-11-19T06:00:00Z" }).data)).toMatchObject({
+      severity: "warning",
+      limit: 800,
+    });
+    expect(rule.check(readingEvent({ powerW: 500, measuredAt: "2026-11-19T06:00:00Z" }).data)).toBeNull();
+    expect(rule.check(readingEvent({ powerW: 1500, measuredAt: "2026-11-19T15:00:00Z" }).data)).toBeNull();
   });
 
   it("monthly goal: at risk when the projection passes the goal, exceeded when consumption does", () => {

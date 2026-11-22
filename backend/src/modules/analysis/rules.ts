@@ -49,6 +49,27 @@ export class VoltageOutOfRange implements Rule {
   }
 }
 
+export class HighNightConsumption implements Rule {
+  readonly name = "high-night-consumption";
+  private readonly hourFormat: Intl.DateTimeFormat;
+
+  constructor(private readonly limitW: number, timeZone: string) {
+    this.hourFormat = new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone });
+  }
+
+  check(reading: ReadingValidated): Violation | null {
+    const hour = Number(this.hourFormat.format(new Date(reading.measuredAt)));
+    const isNight = hour < 5;
+    if (!isNight || reading.powerW <= this.limitW) return null;
+    return {
+      severity: "warning",
+      message: `Unusual consumption at night: ${Math.round(reading.powerW)} W at ${hour}h (limit ${this.limitW} W)`,
+      measuredValue: reading.powerW,
+      limit: this.limitW,
+    };
+  }
+}
+
 export type GoalViolation = Violation & { rule: string };
 
 export function checkMonthlyGoal(forecast: ForecastUpdated, goalKwh: number): GoalViolation | null {
@@ -77,5 +98,6 @@ export function defaultRules(config: AnalysisConfig): Rule[] {
   return [
     new PowerAboveLimit(config.powerLimitW),
     new VoltageOutOfRange(config.minVoltageV, config.maxVoltageV),
+    new HighNightConsumption(config.nightPowerLimitW, config.timeZone),
   ];
 }
