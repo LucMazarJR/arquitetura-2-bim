@@ -54,7 +54,8 @@ MeterReading readMeter(float seconds) {
 
 void connectWifi() {
   Serial.print("Connecting to WiFi");
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  // Canal 6 é o da rede Wokwi-GUEST: informar o canal pula a varredura e conecta em segundos.
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD, 6);
   while (WiFi.status() != WL_CONNECTED) {
     delay(250);
     Serial.print(".");
