@@ -148,3 +148,11 @@ npm run test:ui      # modo interativo: escolhe o teste, roda passo a passo e mo
 | 5. Acoplamento | `backend/src/contracts`, `backend/src/platform/ports.ts`, `PlatformModule`, `backend/test/architecture.test.ts`, `npm run metrics` |
 | 6. Conascência | nomes dos eventos e tópicos (`contracts/events.ts`), tipos verificados pelo compilador, convenção de unidades traduzida em `ingestion/translator.ts` |
 | 7. Justificativas | `docker-compose.yml` (componentes), `app.module.ts` (variável `MODULES`), consumidores idempotentes nos repositórios |
+
+
+## Imagens Da Aplicação
+
+<img width="850" height="450" alt="image" src="https://github.com/user-attachments/assets/a87c33e8-7aaf-45b0-8a4d-e87aa72b2cc5" />
+<br/>
+<img width="320" height="375" alt="image" src="https://github.com/user-attachments/assets/26f9d501-3fa2-43b7-bd49-3c91a6854574" />
+
